@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Questionnaire</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #101827;
+            color: white;
+            margin: 0;
+            padding: 25px 15px;
+        }
+
+        .container {
+            max-width: 450px;
+            margin: 50px auto;
+            background: #1e293b;
+            padding: 25px;
+            border-radius: 15px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #60a5fa;
+        }
+
+        p {
+            color: #cbd5e1;
+        }
+
+        label {
+            display: block;
+            margin: 18px 0 8px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            background: #0f172a;
+            color: white;
+            font: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: #3b82f6;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+        }
+
+        #message {
+            margin-top: 15px;
+            overflow-wrap: anywhere;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Welcome!</h1>
+
+        <p>Please enter your name and answer the question below.</p>
+
+        <form id="questionForm">
+
+            <label for="name">Your name</label>
+            <input
+                type="text"
+                id="name"
+                maxlength="100"
+                required
+                placeholder="Enter your name"
+            >
+
+            <label for="answer">
+                What skill would you like to learn?
+            </label>
+
+            <textarea
+                id="answer"
+                rows="4"
+                maxlength="5000"
+                required
+                placeholder="Write your answer here..."
+            ></textarea>
+
+            <button type="submit" id="submitBtn">
+                Submit Answer
+            </button>
+
+        </form>
+
+        <p id="message" role="status"></p>
+    </div>
+
+    <script>
+        const form = document.getElementById("questionForm");
+        const message = document.getElementById("message");
+        const submitBtn = document.getElementById("submitBtn");
+
+        form.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const name = document.getElementById("name").value.trim();
+            const answer = document.getElementById("answer").value.trim();
+
+            if (!name || !answer) {
+                message.textContent = "Please fill in both fields.";
+                return;
+            }
+
+            submitBtn.disabled = true;
+            message.textContent = "Submitting...";
+
+            try {
+                const response = await fetch("/api/responses", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        answer: answer
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || "Submission failed.");
+                }
+
+                message.textContent = result.message;
+                form.reset();
+
+            } catch (error) {
+                message.textContent =
+                    "Error: " + error.message +
+                    " Check that the backend and database are running.";
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+</html>
